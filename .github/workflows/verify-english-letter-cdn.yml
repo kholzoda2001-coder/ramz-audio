@@ -1,0 +1,60 @@
+name: Verify published English alphabet recordings
+on:
+  push:
+    branches: ['checks/english-letter-cdn-386b299']
+permissions: {}
+jobs:
+  cdn:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Download all 26 recordings from the app's pinned CDN and verify their Git hashes
+        shell: python
+        run: |
+          import concurrent.futures, hashlib, time, urllib.request
+          base = "https://cdn.jsdelivr.net/gh/kholzoda2001-coder/ramz-audio@386b2999c45e18bc3ae359f6aa94f125bb09a56e/mobile/alphabet/en/"
+          expected = {
+              "n_a.mp3": "349563481e3437906d0a982c12d54fefd62a2a13",
+              "n_b.mp3": "1050f920921e6c0fa55a341ef39c763a85815243",
+              "n_c.mp3": "c716732e6c62270acad48aa533d59fbe6de45f89",
+              "n_d.mp3": "13014338ef1e452c25013ae338f9e430a71958b3",
+              "n_e.mp3": "37d6b097f6ddd8c4c4abbbe2f0a48d4590dd094a",
+              "n_f.mp3": "78a1ceb6ceb3d010b003e24317c651eaf91a6d9c",
+              "n_g.mp3": "717e4d4f8886a8dcbc8c549a192b03bee9199f28",
+              "n_h.mp3": "4d6e25aeea760802e6e40401eacc82ca543d5161",
+              "n_i.mp3": "790b1abed192ff5d0975dd12b30b78a70d0ed8e5",
+              "n_j.mp3": "d645a48d74c267162a2d5336c24ebd4680dfcab3",
+              "n_k.mp3": "0927d4c8901a3b1a0895f241b4ebcf8ba8cfdd0e",
+              "n_l.mp3": "207603580638752509eabafa357c35c2fc7f951c",
+              "n_m.mp3": "488a8e5fb0bbb7f75321673a14b76593cebcef2c",
+              "n_n.mp3": "1face439768ccc6e7fc8e98d61e6052cb62a6078",
+              "n_o.mp3": "0c383f0f98981bc1cf968eeb95add409cf7f6bae",
+              "n_p.mp3": "7fcd49ef95fb99d172c18245a1c8cdf6403232cc",
+              "n_q.mp3": "e587011be39b376ff1fbce486b6e4e769dbe5dcc",
+              "n_r.mp3": "db14ec85e3dbd0263b9763f0fd8685de837e5fe6",
+              "n_s.mp3": "092e08db2947b200d19ab4ab55f1119c1dfcd269",
+              "n_t.mp3": "bc805bdc61d8f7d69fa284e1778889b9ee5a0a6a",
+              "n_u.mp3": "f059f827871517ecd22d11adc830961e711df16a",
+              "n_v.mp3": "1d9a6f1feb3961b4e6ab09c44d26790529482cf8",
+              "n_w.mp3": "4685453a0d3d3d9b1df8228d8f624b7a001b27f3",
+              "n_x.mp3": "2fa2c906d9b4bfea8b1132c32488147f0c6c0aea",
+              "n_y.mp3": "90084ad11f016148ff3cbe3e3bebde26f6a3e14a",
+              "n_z.mp3": "b52e6e484ebedd7ae096af3903bdf3cb2fd83228",
+          }
+          def verify(item):
+              name, wanted = item
+              for attempt in range(3):
+                  try:
+                      with urllib.request.urlopen(base + name, timeout=20) as response:
+                          data = response.read()
+                          assert response.status == 200
+                      actual = hashlib.sha1(f"blob {len(data)}\0".encode() + data).hexdigest()
+                      assert actual == wanted, f"{name} content mismatch"
+                      print(f"{name} HTTP 200, {len(data)} verified bytes", flush=True)
+                      return
+                  except Exception:
+                      if attempt == 2:
+                          raise
+                      time.sleep(2)
+          with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+              list(executor.map(verify, expected.items()))
