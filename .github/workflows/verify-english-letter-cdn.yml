@@ -12,7 +12,7 @@ jobs:
         shell: python
         run: |
           import concurrent.futures, hashlib, time, urllib.request
-          base = "https://cdn.jsdelivr.net/gh/kholzoda2001-coder/ramz-audio@386b2999c45e18bc3ae359f6aa94f125bb09a56e/mobile/alphabet/en/"
+          base = "https://raw.githubusercontent.com/kholzoda2001-coder/ramz-audio/386b2999c45e18bc3ae359f6aa94f125bb09a56e/mobile/alphabet/en/"
           expected = {
               "n_a.mp3": "349563481e3437906d0a982c12d54fefd62a2a13",
               "n_b.mp3": "1050f920921e6c0fa55a341ef39c763a85815243",
